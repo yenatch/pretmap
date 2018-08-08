@@ -501,6 +501,81 @@ void Project::saveMapConstantsHeader() {
     saveTextFile(root + "/include/constants/maps.h", text);
 }
 
+// saves heal locations in current maps to root + /src/heal_location.c
+void Project::saveHealLocationStruct(Map *map) {
+
+    QString tab = QString("    ");
+    QString text = QString("#include \"global.h\"\n");
+    text += QString("#include \"heal_location.h\"\n");
+    text += QString("#include \"constants/maps.h\"\n");
+    text += QString("\n");
+    text += QString("static const struct HealLocation sHealLocations[] =\n");
+    text += QString("{\n");
+
+    for (auto it = flyableMaps->begin(); it != flyableMaps->end(); it++) {
+        HealLocation loc = *it;
+        if (loc.name == QString(mapNamesToMapConstants->value(map->name)).remove(0,4)) {
+            it = flyableMaps->erase(it) - 1;
+        }
+    }
+
+
+    if (map->events["heal_event_group"].length() > 0) {
+        
+        QList<HealLocation>* flymaps = flyableMaps;
+
+        for (Event *heal : map->events["heal_event_group"]) {
+            HealLocation hl = heal->buildHealLocationEventMacro();
+            flymaps->append(hl);
+        }
+        flyableMaps = flymaps;
+
+    }
+
+    for (auto map_it : *flyableMaps) {
+
+        text += QString("    {MAP_GROUP(%1), MAP_NUM(%1), %2, %3},\n")
+                .arg(map_it.name)
+                .arg(map_it.x)
+                .arg(map_it.y);
+
+    }
+
+    text += QString("};\n");
+    text += QString("\n");
+
+    // should these funcs be in a text file and copied from there?
+    text += QString("u32 GetHealLocationIndexByMap(u16 mapGroup, u16 mapNum)\n{\n");
+    text += tab + QString("u32 i;\n\n") 
+          + tab + QString("for (i = 0; i < ARRAY_COUNT(sHealLocations); i++)\n")
+          + tab + QString("{\n")
+          + tab + tab + QString("if (sHealLocations[i].group == mapGroup && sHealLocations[i].map == mapNum)\n")
+          + tab + tab + tab + QString("return i + 1;\n")
+          + tab + QString("}\n")
+          + tab + QString("return 0;\n")
+          + QString("}\n\n");
+
+    text += QString("const struct HealLocation *GetHealLocationByMap(u16 mapGroup, u16 mapNum)\n{\n");
+    text += tab + QString("u32 index = GetHealLocationIndexByMap(mapGroup, mapNum);\n")
+          + QString("\n")
+          + tab + QString("if (index == 0)\n")
+          + tab + tab + QString("return NULL;\n")
+          + tab + QString("else\n")
+          + tab + tab + QString("return &sHealLocations[index - 1];\n")
+          + QString("}\n\n");
+
+    text += QString("const struct HealLocation *GetHealLocation(u32 index)\n{\n");
+    text += tab + QString("if (index == 0)\n")
+          + tab + tab + QString("return NULL;\n")
+          + tab + QString("else if (index > ARRAY_COUNT(sHealLocations))\n")
+          + tab + tab + QString("return NULL;\n")
+          + tab + QString("else\n")
+          + tab + tab + QString("return &sHealLocations[index - 1];\n")
+          + QString("}");
+
+    saveTextFile(root + "/src/heal_location.c", text);
+}
+
 void Project::loadMapTilesets(Map* map) {
     if (map->layout->has_unsaved_changes) {
         return;
@@ -947,6 +1022,10 @@ void Project::readMapGroups() {
     groupNames = groups;
     groupedMapNames = groupedMaps;
     mapNames = maps;
+
+    QString hltext = readTextFile(root + QString("/src/heal_location.c"));
+    QList<HealLocation>* hl = parser->parseHealLocs(hltext);
+    flyableMaps = hl;
 }
 
 Map* Project::addNewMapToGroup(QString mapName, int groupNum) {
@@ -1221,6 +1300,8 @@ void Project::loadEventPixmaps(QList<Event*> objects) {
             object->pixmap = QPixmap(":/images/Entities_16x16.png").copy(32, 0, 16, 16);
         } else if (event_type == EventType::Sign || event_type == EventType::HiddenItem || event_type == EventType::SecretBase) {
             object->pixmap = QPixmap(":/images/Entities_16x16.png").copy(48, 0, 16, 16);
+        } else if (event_type == EventType::HealLocation) {
+            object->pixmap = QPixmap(":/images/Entities_16x16.png").copy(64, 0, 16, 16);
         }
 
         if (event_type == EventType::Object) {
@@ -1309,6 +1390,17 @@ void Project::saveMapEvents(Map *map) {
             .arg(bgEventsLabel);
 
     saveTextFile(path, text);
+
+    // save heal event changes
+    if (map->events["heal_event_group"].length() > 0) {
+        QList<HealLocation>* flymaps = flyableMaps;
+        for (Event *heal : map->events["heal_event_group"]) {
+            HealLocation hl = heal->buildHealLocationEventMacro();
+            flymaps->append(hl);
+        }
+        flyableMaps = flymaps;
+    }
+    saveHealLocationStruct(map);
 }
 
 void Project::readMapEvents(Map *map) {
@@ -1377,6 +1469,28 @@ void Project::readMapEvents(Map *map) {
                 qDebug() << QString("Destination map constant '%1' is invalid for warp").arg(mapConstant);
             }
         }
+    }
+
+    map->events["heal_event_group"].clear();
+
+    for (auto it = flyableMaps->begin(); it != flyableMaps->end(); it++) {
+
+        HealLocation loc = *it;
+
+        //if TRUE map is flyable / has healing location
+        if (loc.name == QString(mapNamesToMapConstants->value(map->name)).remove(0,4)) {
+            Event *heal = new Event;
+            heal->put("map_name", map->name);
+            heal->put("x", loc.x);
+            heal->put("y", loc.y);
+            heal->put("loc_name", loc.name);
+            heal->put("elevation", 3); // TODO: change this?
+            heal->put("destination_map_name", mapConstantsToMapNames->value(map->name));
+            heal->put("event_group_type", "heal_event_group");
+            heal->put("event_type", EventType::HealLocation);
+            map->events["heal_event_group"].append(heal);
+        }
+
     }
 
     QList<QStringList> *coords = getLabelMacros(parseAsm(text), coordEventsLabel);
@@ -1455,6 +1569,7 @@ void Project::readMapEvents(Map *map) {
 void Project::setNewMapEvents(Map *map) {
     map->events["object_event_group"].clear();
     map->events["warp_event_group"].clear();
+    map->events["heal_event_group"].clear();
     map->events["coord_event_group"].clear();
     map->events["bg_event_group"].clear();
 }

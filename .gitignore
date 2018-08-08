@@ -1,2 +1,12 @@
 pretmap.pro.user
 *.autosave
+*.stash
+*.o
+moc_*
+qrc_*
+pretmap.app*
+
+Makefile
+
+ui_mainwindow.h
+ui_objectpropertiesframe.h

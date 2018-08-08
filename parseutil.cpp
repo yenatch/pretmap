@@ -68,6 +68,22 @@ int ParseUtil::evaluateDefine(QString define, QMap<QString, int>* knownDefines) 
     return evaluatePostfix(postfixExpression);
 }
 
+// arg here is the text in the file src/heal_location.c
+// returns a list of HealLocations (mapname, x, y)
+QList<HealLocation>* ParseUtil::parseHealLocs(QString text) {
+    QList<HealLocation> *parsed = new QList<HealLocation>;
+    QStringList lines = text.split('\n');
+
+    for (auto line : lines){
+        if (line.contains("MAP_GROUP")){
+            QList<QString> li = line.replace(" ","").chopped(2).remove('{').split(',');
+            HealLocation hloc = HealLocation(li[1].remove("MAP_NUM(").remove(")"), li[2].toInt(), li[3].toInt());
+            parsed->append(hloc);
+        }
+    }
+    return parsed;
+}
+
 QList<Token> ParseUtil::tokenizeExpression(QString expression, QMap<QString, int>* knownIdentifiers) {
     QList<Token> tokens;
 
