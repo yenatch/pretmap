@@ -68,7 +68,7 @@ int ParseUtil::evaluateDefine(QString define, QMap<QString, int>* knownDefines) 
     return evaluatePostfix(postfixExpression);
 }
 
-// arg here is the text in the file src/heal_location.c
+// arg here is the text in the file src/data/heal_locations.h
 // returns a list of HealLocations (mapname, x, y)
 QList<HealLocation>* ParseUtil::parseHealLocs(QString text) {
     QList<HealLocation> *parsed = new QList<HealLocation>;

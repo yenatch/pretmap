@@ -74,7 +74,6 @@ Event* Event::createNewHealLocationEvent(QString map_name)
     event->put("event_group_type", "heal_event_group");
     event->put("event_type", EventType::HealLocation);
     event->put("loc_name", QString(Map::mapConstantFromName(map_name)).remove(0,4));
-    //event->put("index", ); //sizeof flyableMaps
     return event;
 }
 
