@@ -74,6 +74,7 @@ Event* Event::createNewHealLocationEvent(QString map_name)
     event->put("event_group_type", "heal_event_group");
     event->put("event_type", EventType::HealLocation);
     event->put("loc_name", QString(Map::mapConstantFromName(map_name)).remove(0,4));
+    //event->put("index", ); //sizeof flyableMaps
     return event;
 }
 
@@ -167,9 +168,15 @@ QString Event::buildWarpEventMacro(QMap<QString, QString> *mapNamesToMapConstant
 HealLocation Event::buildHealLocationEventMacro()
 {
     HealLocation hl;
-    hl.name = this->get("loc_name");
-    hl.x    = this->get("x").toInt();
-    hl.y    = this->get("y").toInt();
+    hl.name  = this->get("loc_name");
+    try {
+        hl.index = this->get("index").toInt();
+    }
+    catch(...) {
+        hl.index = 0;
+    }
+    hl.x     = this->get("x").toInt();
+    hl.y     = this->get("y").toInt();
     return hl;
 }
 

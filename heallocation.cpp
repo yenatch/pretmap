@@ -2,11 +2,12 @@
 
 //HealLocation::HealLocation() {}
 
-HealLocation::HealLocation(QString map, size_t x0, size_t y0) {
+HealLocation::HealLocation(QString map, int i, size_t x0, size_t y0) {
 
-    name = map;
-    x    = x0;
-    y    = y0;
+    name  = map;
+    index = i;
+    x     = x0;
+    y     = y0;
 
 }
 

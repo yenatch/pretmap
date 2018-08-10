@@ -23,9 +23,11 @@ void NewEventToolButton::initButton()
     this->newWarpAction->setIcon(QIcon(":/icons/add.ico"));
     connect(this->newWarpAction, SIGNAL(triggered(bool)), this, SLOT(newWarp()));
 
+    /* // disable this functionality for now
     this->newHealLocationAction = new QAction("New Heal Location", this);
     this->newHealLocationAction->setIcon(QIcon(":/icons/add.ico"));
     connect(this->newHealLocationAction, SIGNAL(triggered(bool)), this, SLOT(newHealLocation()));
+    */
 
     this->newCoordScriptAction = new QAction("New Coord Script", this);
     this->newCoordScriptAction->setIcon(QIcon(":/icons/add.ico"));
@@ -50,7 +52,7 @@ void NewEventToolButton::initButton()
     QMenu *alignMenu = new QMenu();
     alignMenu->addAction(this->newObjectAction);
     alignMenu->addAction(this->newWarpAction);
-    alignMenu->addAction(this->newHealLocationAction);
+    //alignMenu->addAction(this->newHealLocationAction);
     alignMenu->addAction(this->newCoordScriptAction);
     alignMenu->addAction(this->newCoordWeatherAction);
     alignMenu->addAction(this->newSignAction);

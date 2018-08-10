@@ -501,22 +501,30 @@ void Project::saveMapConstantsHeader() {
     saveTextFile(root + "/include/constants/maps.h", text);
 }
 
-// saves heal locations in current maps to root + /src/heal_location.c
+// saves heal locations in current maps to root + /src/data/heal_locations.h
+// and indexes as defines in root + /include/constants/heal_locations.h
 void Project::saveHealLocationStruct(Map *map) {
 
     QString tab = QString("    ");
-    QString text = QString("#include \"global.h\"\n");
-    text += QString("#include \"heal_location.h\"\n");
-    text += QString("#include \"constants/maps.h\"\n");
-    text += QString("\n");
-    text += QString("static const struct HealLocation sHealLocations[] =\n");
-    text += QString("{\n");
+
+    QString data_text = QString("static const struct HealLocation sHealLocations[] =\n{\n");
+
+    QString constants_text = QString("#ifndef GUARD_CONSTANTS_HEAL_LOCATIONS_H\n");
+    constants_text += QString("#define GUARD_CONSTANTS_HEAL_LOCATIONS_H\n\n");
+
+    QStringList flyableMapsDupes;
+    QSet<QString> flyableMapsUnique;
 
     for (auto it = flyableMaps->begin(); it != flyableMaps->end(); it++) {
         HealLocation loc = *it;
-        if (loc.name == QString(mapNamesToMapConstants->value(map->name)).remove(0,4)) {
+        QString xname = loc.name;
+        if (flyableMapsUnique.contains(xname)) {
+            flyableMapsDupes.append(xname);
+        }
+        if (xname == QString(mapNamesToMapConstants->value(map->name)).remove(0,4)) {
             it = flyableMaps->erase(it) - 1;
         }
+        flyableMapsUnique.insert(xname);
     }
 
 
@@ -526,54 +534,55 @@ void Project::saveHealLocationStruct(Map *map) {
 
         for (Event *heal : map->events["heal_event_group"]) {
             HealLocation hl = heal->buildHealLocationEventMacro();
-            flymaps->append(hl);
+            flymaps->insert(hl.index, hl);
         }
         flyableMaps = flymaps;
 
     }
 
-    for (auto map_it : *flyableMaps) {
+    int i = 1;
 
-        text += QString("    {MAP_GROUP(%1), MAP_NUM(%1), %2, %3},\n")
-                .arg(map_it.name)
-                .arg(map_it.x)
-                .arg(map_it.y);
+    int flip = -1;
 
+    // must add _1 / _2 for maps that have duplicates
+    for (auto map_in : *flyableMaps) {
+        data_text += QString("    {MAP_GROUP(%1), MAP_NUM(%1), %2, %3},\n")
+                     .arg(map_in.name)
+                     .arg(map_in.x)
+                     .arg(map_in.y);
+        if (flyableMapsDupes.contains(map_in.name)) { // map contains multiple heal locations
+            if (map_in.index != 0) {// if index is invalid (==0), make one -- flyableMaps.size
+                constants_text += QString("#define HEAL_LOCATION_%1 %2\n")
+                                  .arg(map_in.name + QString("_") + QString::number(flip + 2))
+                                  .arg(map_in.index);
+            }
+            else {
+                constants_text += QString("#define HEAL_LOCATION_%1 %2\n")
+                                  .arg(map_in.name + QString("_") + QString::number(flip + 2))
+                                  .arg(i);
+            }
+            flip = ~flip;
+        }
+        else {
+            if (map_in.index != 0) {// if index is invalid (==0), make one -- flyableMaps.size
+                constants_text += QString("#define HEAL_LOCATION_%1 %2\n")
+                                  .arg(map_in.name)
+                                  .arg(map_in.index);
+            }
+            else {
+                constants_text += QString("#define HEAL_LOCATION_%1 %2\n")
+                                  .arg(map_in.name)
+                                  .arg(i);
+            }
+        }
+        i++;
     }
 
-    text += QString("};\n");
-    text += QString("\n");
+    data_text += QString("};\n");
+    constants_text += QString("\n#endif // GUARD_CONSTANTS_HEAL_LOCATIONS_H\n");
 
-    // should these funcs be in a text file and copied from there?
-    text += QString("u32 GetHealLocationIndexByMap(u16 mapGroup, u16 mapNum)\n{\n");
-    text += tab + QString("u32 i;\n\n") 
-          + tab + QString("for (i = 0; i < ARRAY_COUNT(sHealLocations); i++)\n")
-          + tab + QString("{\n")
-          + tab + tab + QString("if (sHealLocations[i].group == mapGroup && sHealLocations[i].map == mapNum)\n")
-          + tab + tab + tab + QString("return i + 1;\n")
-          + tab + QString("}\n")
-          + tab + QString("return 0;\n")
-          + QString("}\n\n");
-
-    text += QString("const struct HealLocation *GetHealLocationByMap(u16 mapGroup, u16 mapNum)\n{\n");
-    text += tab + QString("u32 index = GetHealLocationIndexByMap(mapGroup, mapNum);\n")
-          + QString("\n")
-          + tab + QString("if (index == 0)\n")
-          + tab + tab + QString("return NULL;\n")
-          + tab + QString("else\n")
-          + tab + tab + QString("return &sHealLocations[index - 1];\n")
-          + QString("}\n\n");
-
-    text += QString("const struct HealLocation *GetHealLocation(u32 index)\n{\n");
-    text += tab + QString("if (index == 0)\n")
-          + tab + tab + QString("return NULL;\n")
-          + tab + QString("else if (index > ARRAY_COUNT(sHealLocations))\n")
-          + tab + tab + QString("return NULL;\n")
-          + tab + QString("else\n")
-          + tab + tab + QString("return &sHealLocations[index - 1];\n")
-          + QString("}");
-
-    saveTextFile(root + "/src/heal_location.c", text);
+    saveTextFile(root + "/src/data/heal_locations.h", data_text);
+    saveTextFile(root + "/include/constants/heal_locations.h", constants_text);
 }
 
 void Project::loadMapTilesets(Map* map) {
@@ -1023,7 +1032,7 @@ void Project::readMapGroups() {
     groupedMapNames = groupedMaps;
     mapNames = maps;
 
-    QString hltext = readTextFile(root + QString("/src/heal_location.c"));
+    QString hltext = readTextFile(root + QString("/src/data/heal_locations.h"));
     QList<HealLocation>* hl = parser->parseHealLocs(hltext);
     flyableMaps = hl;
 }
@@ -1484,6 +1493,7 @@ void Project::readMapEvents(Map *map) {
             heal->put("x", loc.x);
             heal->put("y", loc.y);
             heal->put("loc_name", loc.name);
+            heal->put("index", loc.index);
             heal->put("elevation", 3); // TODO: change this?
             heal->put("destination_map_name", mapConstantsToMapNames->value(map->name));
             heal->put("event_group_type", "heal_event_group");
