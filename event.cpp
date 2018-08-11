@@ -163,7 +163,6 @@ QString Event::buildWarpEventMacro(QMap<QString, QString> *mapNamesToMapConstant
     return text;
 }
 
-// does this name make sense?
 HealLocation Event::buildHealLocationEventMacro()
 {
     HealLocation hl;

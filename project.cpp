@@ -515,6 +515,8 @@ void Project::saveHealLocationStruct(Map *map) {
     QStringList flyableMapsDupes;
     QSet<QString> flyableMapsUnique;
 
+    // erase old location from flyableMaps list
+    // set flyableMapsDupes and flyableMapsUnique
     for (auto it = flyableMaps->begin(); it != flyableMaps->end(); it++) {
         HealLocation loc = *it;
         QString xname = loc.name;
@@ -524,17 +526,19 @@ void Project::saveHealLocationStruct(Map *map) {
         if (xname == QString(mapNamesToMapConstants->value(map->name)).remove(0,4)) {
             it = flyableMaps->erase(it) - 1;
         }
-        flyableMapsUnique.insert(xname);
+        else {
+            flyableMapsUnique.insert(xname);
+        }
     }
 
-
+    // set new location in flyableMapsList
     if (map->events["heal_event_group"].length() > 0) {
         
         QList<HealLocation>* flymaps = flyableMaps;
 
         for (Event *heal : map->events["heal_event_group"]) {
             HealLocation hl = heal->buildHealLocationEventMacro();
-            flymaps->insert(hl.index, hl);
+            flymaps->insert(hl.index - 1, hl);
         }
         flyableMaps = flymaps;
 
@@ -542,7 +546,7 @@ void Project::saveHealLocationStruct(Map *map) {
 
     int i = 1;
 
-    int flip = -1;
+    QStringList usedDupes;
 
     // must add _1 / _2 for maps that have duplicates
     for (auto map_in : *flyableMaps) {
@@ -551,20 +555,30 @@ void Project::saveHealLocationStruct(Map *map) {
                      .arg(map_in.x)
                      .arg(map_in.y);
         if (flyableMapsDupes.contains(map_in.name)) { // map contains multiple heal locations
-            if (map_in.index != 0) {// if index is invalid (==0), make one -- flyableMaps.size
+
+            QString ending = QString("_");
+
+            if (usedDupes.contains(map_in.name)) {
+                ending += QString("2");
+            }
+            else {
+                ending += QString("1");
+                usedDupes.append(map_in.name);
+            }
+
+            if (map_in.index != 0) {
                 constants_text += QString("#define HEAL_LOCATION_%1 %2\n")
-                                  .arg(map_in.name + QString("_") + QString::number(flip + 2))
+                                  .arg(map_in.name + ending)
                                   .arg(map_in.index);
             }
             else {
                 constants_text += QString("#define HEAL_LOCATION_%1 %2\n")
-                                  .arg(map_in.name + QString("_") + QString::number(flip + 2))
+                                  .arg(map_in.name + ending)
                                   .arg(i);
             }
-            flip = ~flip;
         }
         else {
-            if (map_in.index != 0) {// if index is invalid (==0), make one -- flyableMaps.size
+            if (map_in.index != 0) {
                 constants_text += QString("#define HEAL_LOCATION_%1 %2\n")
                                   .arg(map_in.name)
                                   .arg(map_in.index);
