@@ -876,24 +876,28 @@ void MainWindow::on_toolButton_deleteObject_clicked()
 void MainWindow::on_toolButton_Paint_clicked()
 {
     editor->map_edit_mode = "paint";
+    editor->cursor = QCursor(QPixmap(":/icons/pencil.ico"), 0, 14);
     checkToolButtons();
 }
 
 void MainWindow::on_toolButton_Select_clicked()
 {
     editor->map_edit_mode = "select";
+    editor->cursor = QCursor(QPixmap(":/icons/cursor.ico"), 0, 0);
     checkToolButtons();
 }
 
 void MainWindow::on_toolButton_Fill_clicked()
 {
     editor->map_edit_mode = "fill";
+    editor->cursor = QCursor(QPixmap(":/icons/fill_color.ico"), 12, 10);
     checkToolButtons();
 }
 
 void MainWindow::on_toolButton_Dropper_clicked()
 {
     editor->map_edit_mode = "pick";
+    editor->cursor = QCursor(QPixmap(":/icons/pipette.ico"), 1, 14);
     checkToolButtons();
 }
 
