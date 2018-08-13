@@ -134,6 +134,7 @@ public:
     QString show_location;
     QString battle_scene;
     MapLayout *layout;
+    double scale;
 
     bool isPersistedToFile = true;
 
