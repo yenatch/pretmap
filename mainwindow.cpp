@@ -558,6 +558,8 @@ void MainWindow::openInTextEditor() {
 
     #ifdef Q_OS_CYGWIN
         QString cmd = "cygstart ";
+    #elif defined Q_OS_WIN
+        QString cmd = "cmd /c start ";
     #else
         QString cmd = "open "; // should work on both Q_OS_LINUX and Q_OS_DARWIN
     #endif // Q_OS_CYGWIN
