@@ -556,13 +556,13 @@ void MainWindow::openInTextEditor() {
     QProcess *process = new QProcess(this);
     process->setWorkingDirectory(editor->project->root);
 
-    #ifdef Q_OS_CYGWIN
-        QString cmd = "cygstart ";
-    #elif defined Q_OS_WIN
+    #ifdef Q_OS_DARWIN
+        QString cmd = "open ";
+    #elif defined Q_OS_LINUX
+        QString cmd = "xdg-open ";
+    #else // WINDOWS 
         QString cmd = "cmd /c start ";
-    #else
-        QString cmd = "open "; // should work on both Q_OS_LINUX and Q_OS_DARWIN
-    #endif // Q_OS_CYGWIN
+    #endif // Q_OS_
 
     cmd += "data/maps/" + editor->map->name + "/scripts.inc";
     process->start(cmd);
