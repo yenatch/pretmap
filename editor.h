@@ -109,6 +109,7 @@ public:
     QList<int> *copiedMetatileSelection = new QList<int>;
 
     QString map_edit_mode;
+    QString prev_edit_mode;
     QCursor cursor;
 
     void objectsView_onMousePress(QMouseEvent *event);
