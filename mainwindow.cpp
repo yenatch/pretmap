@@ -15,8 +15,10 @@
 #include <QSpacerItem>
 #include <QFont>
 #include <QScrollBar>
+#include <QPushButton>
 #include <QMessageBox>
 #include <QDialogButtonBox>
+#include <QProcess>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -549,6 +551,21 @@ void MainWindow::redo() {
     editor->redo();
 }
 
+// Open current map scripts in system default editor for .inc files
+void MainWindow::openInTextEditor() {
+    QProcess *process = new QProcess(this);
+    process->setWorkingDirectory(editor->project->root);
+
+    #ifdef Q_OS_CYGWIN
+        QString cmd = "cygstart ";
+    #else
+        QString cmd = "open "; // should work on both Q_OS_LINUX and Q_OS_DARWIN
+    #endif // Q_OS_CYGWIN
+
+    cmd += "data/maps/" + editor->map->name + "/scripts.inc";
+    process->start(cmd);
+}
+
 void MainWindow::on_action_Save_triggered() {
     editor->save();
     updateMapList();
@@ -825,6 +842,13 @@ void MainWindow::updateSelectedObjects() {
             fl->addRow(new QLabel(field_labels[key], widget), combo);
             widget->setLayout(fl);
             frame->layout()->addWidget(widget);
+
+            // generate "Open in Text Editor" button
+            if (key == "script_label") {
+                QPushButton *scriptButton = new QPushButton(QString("Open This Map's Scripts in a Text Editor"));
+                connect(scriptButton, SIGNAL(clicked()), this, SLOT(openInTextEditor()));
+                frame->layout()->addWidget(scriptButton);
+            }
 
             item->bind(combo, key);
         }

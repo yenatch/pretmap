@@ -37,6 +37,8 @@ private slots:
     void undo();
     void redo();
 
+    void openInTextEditor();
+
     void onLoadMapRequested(QString, QString);
     void onMapChanged(Map *map);
     void onMapNeedsRedrawing(Map *map);
