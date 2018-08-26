@@ -248,7 +248,7 @@
                 <item>
                  <widget class="QToolButton" name="toolButton_Move">
                   <property name="toolTip">
-                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Move&lt;/p&gt;&lt;p&gt;Click to drag map around and zoom with scroll wheel.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Move&lt;/p&gt;&lt;p&gt;Click to drag map around.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                   </property>
                   <property name="text">
                    <string>...</string>

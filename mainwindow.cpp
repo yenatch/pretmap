@@ -592,15 +592,15 @@ void MainWindow::on_actionRedo_triggered()
 }
 
 void MainWindow::on_actionZoom_In_triggered() {
-    ui->graphicsView_Map->scale(1.25,1.25);//scale(2.0,2.0);
-    ui->graphicsView_Objects_Map->scale(1.25,1.25);//scale(2.0,2.0);
-    editor->map->scale *= 1.25;//2;
+    ui->graphicsView_Map->scale(2.0,2.0);
+    ui->graphicsView_Objects_Map->scale(2.0,2.0);
+    editor->map->scale *= 2.0;
 }
 
 void MainWindow::on_actionZoom_Out_triggered() {
-    ui->graphicsView_Map->scale(0.8,0.8);//scale(0.5,0.5);
-    ui->graphicsView_Objects_Map->scale(0.8,0.8);//scale(0.5,0.5);
-    editor->map->scale *= 0.8;//0.5;
+    ui->graphicsView_Map->scale(0.5,0.5);
+    ui->graphicsView_Objects_Map->scale(0.5,0.5);
+    editor->map->scale *= 0.5;
 }
 
 void MainWindow::addNewEvent(QString event_type)
@@ -956,7 +956,6 @@ void MainWindow::checkToolButtons() {
 }
 
 void MainWindow::toggleEditModeMove() {
-    qDebug() << "toggleEditModeMove";
     if (editor->map_edit_mode == "move") {
         if (editor->prev_edit_mode == "paint") {
             on_toolButton_Paint_clicked();
