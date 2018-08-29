@@ -131,6 +131,8 @@ private:
 
     void displayMapProperties();
     void checkToolButtons();
+
+    void scaleMapView(int);
 };
 
 enum MapListUserRoles {

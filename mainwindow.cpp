@@ -18,6 +18,7 @@
 #include <QMessageBox>
 #include <QDialogButtonBox>
 #include <QScroller>
+#include <math.h>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -592,15 +593,28 @@ void MainWindow::on_actionRedo_triggered()
 }
 
 void MainWindow::on_actionZoom_In_triggered() {
-    ui->graphicsView_Map->scale(2.0,2.0);
-    ui->graphicsView_Objects_Map->scale(2.0,2.0);
-    editor->map->scale *= 2.0;
+    scaleMapView(1);
 }
 
 void MainWindow::on_actionZoom_Out_triggered() {
-    ui->graphicsView_Map->scale(0.5,0.5);
-    ui->graphicsView_Objects_Map->scale(0.5,0.5);
-    editor->map->scale *= 0.5;
+    scaleMapView(-1);
+}
+
+void MainWindow::scaleMapView(int s) {
+    editor->map->scale_exp += s;
+
+    double base = (double)editor->map->scale_base;
+    double exp  = editor->map->scale_exp;
+    double sfactor = pow(base,s);
+
+    ui->graphicsView_Map->scale(sfactor,sfactor);
+    ui->graphicsView_Objects_Map->scale(sfactor,sfactor);
+
+    ui->graphicsView_Map->setFixedSize((editor->scene->width() + 2) * pow(base,exp), 
+                                       (editor->scene->height() + 2) * pow(base,exp));
+
+    ui->graphicsView_Objects_Map->setFixedSize((editor->scene->width() + 2) * pow(base,exp), 
+                                               (editor->scene->height() + 2) * pow(base,exp));
 }
 
 void MainWindow::addNewEvent(QString event_type)

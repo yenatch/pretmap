@@ -16,7 +16,6 @@ Map::Map(QObject *parent) : QObject(parent)
     selected_metatiles_height = 1;
     selected_metatiles = new QList<int>;
     selected_metatiles->append(1);
-    scale = 1;
 }
 
 void Map::setName(QString mapName) {
@@ -613,7 +612,7 @@ void Map::hoveredTileChanged(int x, int y, int block) {
                           .arg(x)
                           .arg(y)
                           .arg(QString("%1").arg(block, 3, 16, QChar('0')).toUpper())
-                          .arg(QString::number(this->scale)));
+                          .arg(QString::number(pow(this->scale_base,this->scale_exp))));
 }
 
 void Map::clearHoveredTile() {
