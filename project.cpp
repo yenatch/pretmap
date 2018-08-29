@@ -501,10 +501,9 @@ void Project::saveMapConstantsHeader() {
     saveTextFile(root + "/include/constants/maps.h", text);
 }
 
-// saves heal locations in current maps to root + /src/data/heal_locations.h
+// saves heal location coords in root + /src/data/heal_locations.h
 // and indexes as defines in root + /include/constants/heal_locations.h
 void Project::saveHealLocationStruct(Map *map) {
-
     QString tab = QString("    ");
 
     QString data_text = QString("static const struct HealLocation sHealLocations[] =\n{\n");
@@ -512,7 +511,7 @@ void Project::saveHealLocationStruct(Map *map) {
     QString constants_text = QString("#ifndef GUARD_CONSTANTS_HEAL_LOCATIONS_H\n");
     constants_text += QString("#define GUARD_CONSTANTS_HEAL_LOCATIONS_H\n\n");
 
-    QStringList flyableMapsDupes;
+    QMap<QString, int> flyableMapsDupes;
     QSet<QString> flyableMapsUnique;
 
     // erase old location from flyableMaps list
@@ -521,7 +520,7 @@ void Project::saveHealLocationStruct(Map *map) {
         HealLocation loc = *it;
         QString xname = loc.name;
         if (flyableMapsUnique.contains(xname)) {
-            flyableMapsDupes.append(xname);
+            flyableMapsDupes[xname] = 1;
         }
         if (xname == QString(mapNamesToMapConstants->value(map->name)).remove(0,4)) {
             it = flyableMaps->erase(it) - 1;
@@ -533,7 +532,6 @@ void Project::saveHealLocationStruct(Map *map) {
 
     // set new location in flyableMapsList
     if (map->events["heal_event_group"].length() > 0) {
-        
         QList<HealLocation>* flymaps = flyableMaps;
 
         for (Event *heal : map->events["heal_event_group"]) {
@@ -541,53 +539,33 @@ void Project::saveHealLocationStruct(Map *map) {
             flymaps->insert(hl.index - 1, hl);
         }
         flyableMaps = flymaps;
-
     }
 
     int i = 1;
 
-    QStringList usedDupes;
-
-    // must add _1 / _2 for maps that have duplicates
     for (auto map_in : *flyableMaps) {
         data_text += QString("    {MAP_GROUP(%1), MAP_NUM(%1), %2, %3},\n")
                      .arg(map_in.name)
                      .arg(map_in.x)
                      .arg(map_in.y);
-        if (flyableMapsDupes.contains(map_in.name)) { // map contains multiple heal locations
 
-            QString ending = QString("_");
+        QString ending = QString("");
 
-            if (usedDupes.contains(map_in.name)) {
-                ending += QString("2");
-            }
-            else {
-                ending += QString("1");
-                usedDupes.append(map_in.name);
-            }
-
-            if (map_in.index != 0) {
-                constants_text += QString("#define HEAL_LOCATION_%1 %2\n")
-                                  .arg(map_in.name + ending)
-                                  .arg(map_in.index);
-            }
-            else {
-                constants_text += QString("#define HEAL_LOCATION_%1 %2\n")
-                                  .arg(map_in.name + ending)
-                                  .arg(i);
-            }
+        // must add _1 / _2 for maps that have duplicates
+        if (flyableMapsDupes.keys().contains(map_in.name)) {
+            // map contains multiple heal locations
+            ending += QString("_%1").arg(flyableMapsDupes[map_in.name]);
+            flyableMapsDupes[map_in.name]++;
+        }
+        if (map_in.index != 0) {
+            constants_text += QString("#define HEAL_LOCATION_%1 %2\n")
+                              .arg(map_in.name + ending)
+                              .arg(map_in.index);
         }
         else {
-            if (map_in.index != 0) {
-                constants_text += QString("#define HEAL_LOCATION_%1 %2\n")
-                                  .arg(map_in.name)
-                                  .arg(map_in.index);
-            }
-            else {
-                constants_text += QString("#define HEAL_LOCATION_%1 %2\n")
-                                  .arg(map_in.name)
-                                  .arg(i);
-            }
+            constants_text += QString("#define HEAL_LOCATION_%1 %2\n")
+                              .arg(map_in.name + ending)
+                              .arg(i);
         }
         i++;
     }
