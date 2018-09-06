@@ -560,11 +560,16 @@ void MainWindow::openInTextEditor() {
         QString cmd = "open ";
     #elif defined Q_OS_LINUX
         QString cmd = "xdg-open ";
-    #else // WINDOWS 
-        QString cmd = "cmd /c start ";
-    #endif // Q_OS_
+    #elif defined Q_OS_WIN 
+        QString cmd = "cmd /c start \"";
+    #endif
 
     cmd += "data/maps/" + editor->map->name + "/scripts.inc";
+
+    #ifdef Q_OS_WIN
+        cmd += "\"";
+    #endif
+
     process->start(cmd);
 }
 
