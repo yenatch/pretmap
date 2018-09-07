@@ -19,6 +19,7 @@
 #include <QMessageBox>
 #include <QDialogButtonBox>
 #include <QProcess>
+#include <QSysInfo>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -554,6 +555,7 @@ void MainWindow::redo() {
 // Open current map scripts in system default editor for .inc files
 void MainWindow::openInTextEditor() {
     QProcess *process = new QProcess(this);
+    QSysInfo sysInfo;
     process->setWorkingDirectory(editor->project->root);
 
     #ifdef Q_OS_DARWIN
@@ -562,6 +564,9 @@ void MainWindow::openInTextEditor() {
         QString cmd = "xdg-open ";
     #elif defined Q_OS_WIN 
         QString cmd = "cmd /c start \"";
+    #else
+        qDebug() << "Functionality is not available with this OS ("
+                 << sysInfo.productType() << ")";
     #endif
 
     cmd += "data/maps/" + editor->map->name + "/scripts.inc";
@@ -850,13 +855,6 @@ void MainWindow::updateSelectedObjects() {
             widget->setLayout(fl);
             frame->layout()->addWidget(widget);
 
-            // generate "Open in Text Editor" button
-            if (key == "script_label") {
-                QPushButton *scriptButton = new QPushButton(QString("Open This Map's Scripts in a Text Editor"));
-                connect(scriptButton, SIGNAL(clicked()), this, SLOT(openInTextEditor()));
-                frame->layout()->addWidget(scriptButton);
-            }
-
             item->bind(combo, key);
         }
 
@@ -902,6 +900,11 @@ void MainWindow::on_toolButton_deleteObject_clicked()
             updateSelectedObjects();
         }
     }
+}
+
+void MainWindow::on_toolButton_Open_Scripts_clicked()
+{
+    openInTextEditor();
 }
 
 void MainWindow::on_toolButton_Paint_clicked()
