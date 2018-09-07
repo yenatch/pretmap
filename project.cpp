@@ -535,7 +535,7 @@ void Project::saveHealLocationStruct(Map *map) {
         QList<HealLocation>* flymaps = flyableMaps;
 
         for (Event *heal : map->events["heal_event_group"]) {
-            HealLocation hl = heal->buildHealLocationEventMacro();
+            HealLocation hl = heal->buildHealLocation();
             flymaps->insert(hl.index - 1, hl);
         }
         flyableMaps = flymaps;
@@ -1396,7 +1396,7 @@ void Project::saveMapEvents(Map *map) {
     if (map->events["heal_event_group"].length() > 0) {
         QList<HealLocation>* flymaps = flyableMaps;
         for (Event *heal : map->events["heal_event_group"]) {
-            HealLocation hl = heal->buildHealLocationEventMacro();
+            HealLocation hl = heal->buildHealLocation();
             flymaps->append(hl);
         }
         flyableMaps = flymaps;

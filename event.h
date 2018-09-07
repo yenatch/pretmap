@@ -65,7 +65,7 @@ public:
 
     QString buildObjectEventMacro(int);
     QString buildWarpEventMacro(QMap<QString, QString>*);
-    HealLocation buildHealLocationEventMacro();
+    HealLocation buildHealLocation();
     QString buildCoordScriptEventMacro();
     QString buildCoordWeatherEventMacro();
     QString buildSignEventMacro();
